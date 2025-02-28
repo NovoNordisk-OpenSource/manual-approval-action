@@ -7,6 +7,5 @@ jobs:
     name: Checks if this action works
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
       - uses: actions/checkout@v3
       - uses: ./ # This is the path to the action.yml file
