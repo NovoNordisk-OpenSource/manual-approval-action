@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./ # This is the path to the action.yml file
         with:
-          secret: ${{ secrets.github.TOKEN }}
+          secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: showoffninja
           minimum-approvals: 1
           issue-title: "Deploying v1.3.5 to prod from staging"
