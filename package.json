@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc && ncc build lib/index.js"
   },
   "keywords": [],
   "author": "showoffninja",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.0",
-    "@octokit/rest": "^21.1.1"
+    "@octokit/rest": "^21.1.1",
+    "@vercel/ncc": "^0.38.3"
   }
 }
