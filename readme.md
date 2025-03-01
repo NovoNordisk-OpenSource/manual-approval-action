@@ -81,6 +81,7 @@ jobs:
 | `issue_body` | Body of the created issue. Use {run_id} placeholder to include the run ID | Yes | "Please approve workflow run {run_id}" |
 | `exclude-workflow-initiator-as-approver` | Exclude the workflow initiator as an approver | Yes | false |
 | `additional-approved-words` | Comma separated list of additional words that can be used to approve the issue | No | "" |
+| `additional-denied-words` | Comma separated list of additional words that can be used to deny the issue | No | "" |
 | `TARGET_REPO` | Repository name where the approval issue should be created | No | Current repository |
 | `TARGET_REPO_OWNER` | Owner name where the approval issue should be created | No | Current owner |
 
