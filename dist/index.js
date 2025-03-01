@@ -352,6 +352,8 @@ function main() {
             const [owner, repo] = repoFullName.split('/');
             const finalTargetRepoOwner = targetRepoOwner || owner;
             const finalTargetRepoName = targetRepoName || repo;
+            console.log('targetRepoOwner:', finalTargetRepoOwner);
+            console.log('targetRepoName:', finalTargetRepoName);
             const client = yield newGithubClient();
             const approvers = core.getInput('approvers').split(',');
             const failOnDenial = FAIL_ON_DENIAL;

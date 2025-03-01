@@ -372,6 +372,8 @@ async function main(): Promise<void> {
     const [owner, repo] = repoFullName.split('/');
     const finalTargetRepoOwner = targetRepoOwner || owner;
     const finalTargetRepoName = targetRepoName || repo;
+    console.log('targetRepoOwner:', finalTargetRepoOwner);
+    console.log('targetRepoName:', finalTargetRepoName);
 
     const client = await newGithubClient();
 
