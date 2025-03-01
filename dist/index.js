@@ -181,11 +181,19 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
             const commentBody = ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || '';
             const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
             const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
+            console.log(`Checking comment: "${commentBody}"`);
+            console.log(`Approved words: ${approvedWords.join(', ')}`);
+            console.log(`Denied words: ${deniedWords.join(', ')}`);
+            console.log(`Is approval: ${isApproval}, Is denial: ${isDenial}`);
             if (isApproval) {
                 approvedBy.add(commentUser);
+                console.log(`User ${commentUser} approved`);
+                return ApprovalStatusApproved;
             }
             else if (isDenial) {
                 deniedBy.add(commentUser);
+                console.log(`User ${commentUser} denied`);
+                return ApprovalStatusDenied;
             }
         }
         if (deniedBy.size > 0) {

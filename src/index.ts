@@ -184,10 +184,19 @@ async function approvalFromComments(
     const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
     const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
 
+    console.log(`Checking comment: "${commentBody}"`);
+    console.log(`Approved words: ${approvedWords.join(', ')}`);
+    console.log(`Denied words: ${deniedWords.join(', ')}`);
+    console.log(`Is approval: ${isApproval}, Is denial: ${isDenial}`);
+
     if (isApproval) {
       approvedBy.add(commentUser);
+      console.log(`User ${commentUser} approved`);
+      return ApprovalStatusApproved;
     } else if (isDenial) {
       deniedBy.add(commentUser);
+      console.log(`User ${commentUser} denied`);
+      return ApprovalStatusDenied;
     }
   }
 
