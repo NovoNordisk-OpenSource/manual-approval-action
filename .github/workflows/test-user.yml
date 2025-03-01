@@ -12,7 +12,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.TEST_USER_PAT }}
       run: |
-        ISSUE_NUMBER=34
+        ISSUE_NUMBER=23
         curl -X PATCH \
           -H "Authorization: token $GITHUB_TOKEN" \
           -H "Accept: application/vnd.github.v3+json" \
