@@ -8,6 +8,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Set up Git user details
+      run: |
+        git config --global user.name "test-user"
+        git config --global user.email "test-user@example.com"
     - name: comment on issue
       env:
         GITHUB_TOKEN: ${{ secrets.TEST_USER_PAT }}
