@@ -84,6 +84,7 @@ const envVarTargetRepo = 'INPUT_TARGET-REPOSITORY';
 console.log('enVaradditional-approved-words:', envVarAdditionalApprovedWords);
 function readAdditionalWords(envVar) {
     var _a;
+    console.log('envVar:', envVar);
     const rawValue = ((_a = process.env[envVar]) === null || _a === void 0 ? void 0 : _a.trim()) || '';
     if (rawValue.length === 0) {
         return [];
