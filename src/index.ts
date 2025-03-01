@@ -422,3 +422,20 @@ async function main(): Promise<void> {
 
 // Run the application
 main();
+
+export {
+  validateInput,
+  approvalFromComments,
+  createApprovalIssue,
+  newCommentLoopChannel,
+  newGithubClient,
+  readAdditionalWords,
+  main
+};
+
+export const config = {
+  pollingInterval: 10 * 1000,
+  failOnDenial: true,
+  approvedWords: ['approved', 'approve', 'lgtm', 'yes'],
+  deniedWords: ['denied', 'deny', 'no'],
+};
