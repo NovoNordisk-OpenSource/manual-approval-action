@@ -14,12 +14,12 @@ jobs:
         git config --global user.email "test-user@example.com"
     - name: comment on issue
       env:
-        GITHUB_TOKEN: ${{ secrets.TEST_USER_PAT }}
+        GITHUB_USR: ${{ secrets.TEST_USER_PAT }}
       run: |
           ISSUE_NUMBER=23
           COMMENT_BODY="Thank you for opening this issue! We will look into it."
           curl -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Authorization: token $GITHUB_USR" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER/comments \
             -d "{\"body\":\"${COMMENT_BODY}\"}"
