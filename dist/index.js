@@ -300,7 +300,7 @@ function newCommentLoopChannel(client, apprv) {
 // GitHub client
 function newGithubClient() {
     return __awaiter(this, void 0, void 0, function* () {
-        const token = core.getInput('GITHUB_TOKEN');
+        const token = core.getInput('secret');
         return new rest_1.Octokit({ auth: token });
     });
 }
@@ -308,10 +308,10 @@ function newGithubClient() {
 function validateInput() {
     return __awaiter(this, void 0, void 0, function* () {
         const requiredEnvVars = [
-            'GITHUB_REPOSITORY',
-            'GITHUB_RUN_ID',
-            'GITHUB_REPOSITORY_OWNER',
-            'GITHUB_TOKEN',
+            //    'GITHUB_REPOSITORY',
+            //    'GITHUB_RUN_ID',
+            //    'GITHUB_REPOSITORY_OWNER',
+            'secret',
             'approvers',
         ];
         const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
@@ -334,10 +334,10 @@ function main() {
             const finalTargetRepoOwner = targetRepoOwner || owner;
             const finalTargetRepoName = targetRepoName || repo;
             const client = yield newGithubClient();
-            const approvers = core.getInput('APPROVERS').split(',');
+            const approvers = core.getInput('approvers').split(',');
             const failOnDenial = core.getBooleanInput('FAIL_ON_DENIAL');
-            const issueTitle = core.getInput('ISSUE_TITLE');
-            const issueBody = core.getInput('ISSUE_BODY');
+            const issueTitle = core.getInput('issue_title');
+            const issueBody = core.getInput('issue_body');
             const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);
             const apprv = yield newApprovalEnvironment(client, repoFullName, repoOwner, runID, approvers, minimumApprovals, issueTitle, issueBody, finalTargetRepoOwner, finalTargetRepoName, failOnDenial);
             yield createApprovalIssue(github_1.context, apprv);
