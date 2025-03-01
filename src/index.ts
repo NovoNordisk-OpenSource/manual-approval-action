@@ -391,7 +391,7 @@ async function main(): Promise<void> {
     
     const issueTitle = core.getInput('issue_title');
     const issueBody = core.getInput('issue_body');
-    const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);
+    const minimumApprovals = parseInt(core.getInput('minimum-approvals'), 10);
 
     const apprv: ApprovalEnvironment = await newApprovalEnvironment(
       client,
