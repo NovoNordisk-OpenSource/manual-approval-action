@@ -220,7 +220,7 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
         return ApprovalStatusPending;
     });
 }
-// Retrieves the list of approvers
+// Retrieves the list of approvers - NEVER USED!
 function retrieveApprovers(client, repoOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         const approversInput = core.getInput('APPROVERS');
@@ -379,7 +379,8 @@ function main() {
             console.log('targetRepoOwner:', finalTargetRepoOwner);
             console.log('targetRepoName:', finalTargetRepoName);
             const client = yield newGithubClient();
-            const approvers = core.getInput('approvers').split(',');
+            // const approvers = core.getInput('approvers').split(',');
+            const approvers = readApproversList(envVarApprovers);
             const failOnDenial = FAIL_ON_DENIAL;
             const issueTitle = core.getInput('issue_title');
             const issueBody = core.getInput('issue_body');

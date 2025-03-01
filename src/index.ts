@@ -222,7 +222,7 @@ async function approvalFromComments(
   return ApprovalStatusPending;
 }
 
-// Retrieves the list of approvers
+// Retrieves the list of approvers - NEVER USED!
 async function retrieveApprovers(client: Octokit, repoOwner: string): Promise<string[]> {
   const approversInput = core.getInput('APPROVERS');
   if (!approversInput) {
@@ -397,7 +397,8 @@ async function main(): Promise<void> {
 
     const client = await newGithubClient();
 
-    const approvers = core.getInput('approvers').split(',');
+    // const approvers = core.getInput('approvers').split(',');
+    const approvers = readApproversList(envVarApprovers);
     const failOnDenial = FAIL_ON_DENIAL;
     
     const issueTitle = core.getInput('issue_title');
