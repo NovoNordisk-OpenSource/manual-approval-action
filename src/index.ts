@@ -174,7 +174,7 @@ async function approvalFromComments(
 
   for (const comment of comments) {
     const commentUser = comment.user?.login?.toLowerCase();
-
+    console.log(`Comment by ${commentUser}: ${comment.body}`);
     if (!commentUser || !approverSet.has(commentUser)) {
       continue;
     }

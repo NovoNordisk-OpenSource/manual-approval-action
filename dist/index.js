@@ -174,6 +174,7 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
         const deniedBy = new Set();
         for (const comment of comments) {
             const commentUser = (_b = (_a = comment.user) === null || _a === void 0 ? void 0 : _a.login) === null || _b === void 0 ? void 0 : _b.toLowerCase();
+            console.log(`Comment by ${commentUser}: ${comment.body}`);
             if (!commentUser || !approverSet.has(commentUser)) {
                 continue;
             }
