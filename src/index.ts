@@ -21,11 +21,14 @@ const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
 const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
 const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
 const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
-const envVarAdditionalApprovedWords: string = 'INPUT_ADDITIONAL-APPROVED-WORDS';
+// const envVarAdditionalApprovedWords: string = 'INPUT_ADDITIONAL-APPROVED-WORDS';
+const envVarAdditionalApprovedWords: string = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords: string = 'INPUT_ADDITIONAL-DENIED-WORDS';
 const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
 const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
 const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
+
+console.log('enVaradditional-approved-words:', envVarAdditionalApprovedWords);
 
 function readAdditionalWords(envVar: string): string[] {
   const rawValue = process.env[envVar]?.trim() || '';
@@ -36,6 +39,7 @@ function readAdditionalWords(envVar: string): string[] {
 }
 
 const additionalApprovedWords: string[] = readAdditionalWords(envVarAdditionalApprovedWords);
+console.log('additionalApprovedWords:', additionalApprovedWords);
 const additionalDeniedWords: string[] = readAdditionalWords(envVarAdditionalDeniedWords);
 
 const approvedWords: string[] = ['approved', 'approve', 'lgtm', 'yes', ...additionalApprovedWords];
@@ -354,7 +358,6 @@ async function validateInput(): Promise<void> {
   
   // Validate minimum approvals if provided
   const minimumApprovals = core.getInput('minimum-approvals');
-  console.log(`Minimum approvals: ${minimumApprovals}`);
 
   if (minimumApprovals) {
     const minApprovalsNum = parseInt(minimumApprovals, 10);
@@ -365,7 +368,6 @@ async function validateInput(): Promise<void> {
       throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
     }
   }
-  console.log('Input validation pending....');
   console.log('Input validation successful');
 }
 

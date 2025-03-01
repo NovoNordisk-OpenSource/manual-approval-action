@@ -75,11 +75,13 @@ const envVarMinimumApprovals = 'INPUT_MINIMUM-APPROVALS';
 const envVarIssueTitle = 'INPUT_ISSUE-TITLE';
 const envVarIssueBody = 'INPUT_ISSUE-BODY';
 const envVarExcludeWorkflowInitiatorAsApprover = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
-const envVarAdditionalApprovedWords = 'INPUT_ADDITIONAL-APPROVED-WORDS';
+// const envVarAdditionalApprovedWords: string = 'INPUT_ADDITIONAL-APPROVED-WORDS';
+const envVarAdditionalApprovedWords = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords = 'INPUT_ADDITIONAL-DENIED-WORDS';
 const envVarFailOnDenial = 'INPUT_FAIL-ON-DENIAL';
 const envVarTargetRepoOwner = 'INPUT_TARGET-REPOSITORY-OWNER';
 const envVarTargetRepo = 'INPUT_TARGET-REPOSITORY';
+console.log('enVaradditional-approved-words:', envVarAdditionalApprovedWords);
 function readAdditionalWords(envVar) {
     var _a;
     const rawValue = ((_a = process.env[envVar]) === null || _a === void 0 ? void 0 : _a.trim()) || '';
@@ -89,6 +91,7 @@ function readAdditionalWords(envVar) {
     return rawValue.split(',').map(word => word.trim());
 }
 const additionalApprovedWords = readAdditionalWords(envVarAdditionalApprovedWords);
+console.log('additionalApprovedWords:', additionalApprovedWords);
 const additionalDeniedWords = readAdditionalWords(envVarAdditionalDeniedWords);
 const approvedWords = ['approved', 'approve', 'lgtm', 'yes', ...additionalApprovedWords];
 const deniedWords = ['denied', 'deny', 'no', ...additionalDeniedWords];
@@ -344,7 +347,6 @@ function validateInput() {
         }
         // Validate minimum approvals if provided
         const minimumApprovals = core.getInput('minimum-approvals');
-        console.log(`Minimum approvals: ${minimumApprovals}`);
         if (minimumApprovals) {
             const minApprovalsNum = parseInt(minimumApprovals, 10);
             if (isNaN(minApprovalsNum) || minApprovalsNum < 1) {
@@ -354,7 +356,6 @@ function validateInput() {
                 throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
             }
         }
-        console.log('Input validation pending....');
         console.log('Input validation successful');
     });
 }

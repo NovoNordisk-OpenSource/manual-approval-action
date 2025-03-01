@@ -16,5 +16,5 @@ jobs:
           issue-title: "Deploying v1.3.5 to prod from staging"
           issue-body: "Please approve or deny the deployment of version v1.3.5."
           exclude-workflow-initiator-as-approver: false
-          additional-approved-words: ""
+          additional-approved-words: "sally, nelson, godkendt"
           additional-denied-words: ""
