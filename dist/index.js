@@ -83,9 +83,8 @@ const envVarTargetRepoOwner = 'INPUT_TARGET-REPOSITORY-OWNER';
 const envVarTargetRepo = 'INPUT_TARGET-REPOSITORY';
 console.log('enVaradditional-approved-words:', envVarAdditionalApprovedWords);
 function readAdditionalWords(envVar) {
-    var _a;
-    console.log('envVar:', envVar);
-    const rawValue = ((_a = process.env[envVar]) === null || _a === void 0 ? void 0 : _a.trim()) || '';
+    console.log('envVar:', (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '');
+    const rawValue = (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '';
     if (rawValue.length === 0) {
         return [];
     }
