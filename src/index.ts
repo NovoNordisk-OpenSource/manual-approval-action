@@ -21,7 +21,6 @@ const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
 const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
 const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
 const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
-// const envVarAdditionalApprovedWords: string = 'INPUT_ADDITIONAL-APPROVED-WORDS';
 const envVarAdditionalApprovedWords: string = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords: string = core.getInput('additional-denied-words');
 const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
@@ -29,7 +28,6 @@ const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
 const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
 
 function readAdditionalWords(envVar: string): string[] {
-  console.log('envVar:', envVar?.trim() || '');
   const rawValue = envVar?.trim() || '';
   if (rawValue.length === 0) {
     return [];
@@ -38,14 +36,11 @@ function readAdditionalWords(envVar: string): string[] {
 }
 
 const additionalApprovedWords: string[] = readAdditionalWords(envVarAdditionalApprovedWords);
-console.log('additionalApprovedWords:', additionalApprovedWords);
 const additionalDeniedWords: string[] = readAdditionalWords(envVarAdditionalDeniedWords);
-console.log('additionalDeniedWords:', additionalDeniedWords);
+
 
 const approvedWords: string[] = ['approved', 'approve', 'lgtm', 'yes', ...additionalApprovedWords];
 const deniedWords: string[] = ['denied', 'deny', 'no', ...additionalDeniedWords];
-console.log('approvedWords:', approvedWords);
-console.log('deniedWords:', deniedWords);
 
 // Approval Status Types
 type ApprovalStatus = 'approved' | 'denied' | 'pending';
