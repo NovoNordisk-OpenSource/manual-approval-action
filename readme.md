@@ -95,4 +95,4 @@ jobs:
 6. After completion, the issue is automatically closed
 
 ## License
-This project is licenced under the MIT License - see the  
+This project is licenced under the MIT License - see the 
