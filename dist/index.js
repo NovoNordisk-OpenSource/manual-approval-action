@@ -70,7 +70,7 @@ const envVarRunID = 'GITHUB_RUN_ID';
 const envVarRepoOwner = 'GITHUB_REPOSITORY_OWNER';
 const envVarWorkflowInitiator = 'GITHUB_ACTOR';
 const envVarToken = 'INPUT_SECRET';
-const envVarApprovers = 'INPUT_APPROVERS';
+const envVarApprovers = core.getInput('approvers');
 const envVarMinimumApprovals = 'INPUT_MINIMUM-APPROVALS';
 const envVarIssueTitle = 'INPUT_ISSUE-TITLE';
 const envVarIssueBody = 'INPUT_ISSUE-BODY';
@@ -87,6 +87,14 @@ function readAdditionalWords(envVar) {
     }
     return rawValue.split(',').map(word => word.trim());
 }
+function readApproversList(envVar) {
+    const rawValue = (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '';
+    if (rawValue.length === 0) {
+        return [];
+    }
+    return rawValue.split(',').map(approver => approver.trim());
+}
+console.log('Approvers:', readApproversList(envVarApprovers));
 const additionalApprovedWords = readAdditionalWords(envVarAdditionalApprovedWords);
 const additionalDeniedWords = readAdditionalWords(envVarAdditionalDeniedWords);
 const approvedWords = ['approved', 'approve', 'lgtm', 'yes', ...additionalApprovedWords];
