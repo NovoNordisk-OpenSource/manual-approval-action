@@ -10,7 +10,7 @@ inputs:
   secret:
     description: "github secret"
     required: true
-    default: "World"
+    default: "SomeKindOfSecret"
   approvers: 
     description: "Comma separated list of users or teams who can approve the deployment"
     required: true
