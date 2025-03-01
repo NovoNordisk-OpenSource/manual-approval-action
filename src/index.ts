@@ -327,7 +327,7 @@ async function validateInput(): Promise<void> {
     'secret',
     'approvers',
   ];
-
+  console.log('GITHUB_TOKEN:', process.env.secret);
   const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
   if (missingEnvVars.length > 0) {
     throw new Error(`Missing env vars: ${missingEnvVars.join(', ')}`);
