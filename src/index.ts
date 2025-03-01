@@ -10,6 +10,7 @@ import * as path from 'path';
 // Constants
 const pollingInterval: number = 10 * 1000; // 10 seconds in milliseconds
 
+const FAIL_ON_DENIAL:boolean = true;
 const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
 const envVarRunID: string = 'GITHUB_RUN_ID';
 const envVarRepoOwner: string = 'GITHUB_REPOSITORY_OWNER';
@@ -375,7 +376,8 @@ async function main(): Promise<void> {
     const client = await newGithubClient();
 
     const approvers = core.getInput('approvers').split(',');
-    const failOnDenial = core.getBooleanInput('FAIL_ON_DENIAL');
+    const failOnDenial = FAIL_ON_DENIAL;
+    
     const issueTitle = core.getInput('issue_title');
     const issueBody = core.getInput('issue_body');
     const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);

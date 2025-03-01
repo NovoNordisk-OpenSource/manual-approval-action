@@ -56,6 +56,7 @@ const process = __importStar(__nccwpck_require__(932));
 const fs = __importStar(__nccwpck_require__(9896));
 // Constants
 const pollingInterval = 10 * 1000; // 10 seconds in milliseconds
+const FAIL_ON_DENIAL = true;
 const envVarRepoFullName = 'GITHUB_REPOSITORY';
 const envVarRunID = 'GITHUB_RUN_ID';
 const envVarRepoOwner = 'GITHUB_REPOSITORY_OWNER';
@@ -353,7 +354,7 @@ function main() {
             const finalTargetRepoName = targetRepoName || repo;
             const client = yield newGithubClient();
             const approvers = core.getInput('approvers').split(',');
-            const failOnDenial = core.getBooleanInput('FAIL_ON_DENIAL');
+            const failOnDenial = FAIL_ON_DENIAL;
             const issueTitle = core.getInput('issue_title');
             const issueBody = core.getInput('issue_body');
             const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);
