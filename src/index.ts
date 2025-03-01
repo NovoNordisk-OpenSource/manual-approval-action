@@ -355,6 +355,7 @@ async function validateInput(): Promise<void> {
   // Validate minimum approvals if provided
   const minimumApprovals = core.getInput('minimum-approvals');
   console.log(`Minimum approvals: ${minimumApprovals}`);
+
   if (minimumApprovals) {
     const minApprovalsNum = parseInt(minimumApprovals, 10);
     if (isNaN(minApprovalsNum) || minApprovalsNum < 1) {
@@ -364,7 +365,7 @@ async function validateInput(): Promise<void> {
       throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
     }
   }
-  
+  console.log('Input validation pending');
   console.log('Input validation successful');
 }
 
