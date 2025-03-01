@@ -351,10 +351,10 @@ async function main(): Promise<void> {
 
     const client = await newGithubClient();
 
-    const approvers = core.getInput('APPROVERS').split(',');
+    const approvers = core.getInput('approvers').split(',');
     const failOnDenial = core.getBooleanInput('FAIL_ON_DENIAL');
-    const issueTitle = core.getInput('ISSUE_TITLE');
-    const issueBody = core.getInput('ISSUE_BODY');
+    const issueTitle = core.getInput('issue_title');
+    const issueBody = core.getInput('issue_body');
     const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);
 
     const apprv: ApprovalEnvironment = await newApprovalEnvironment(

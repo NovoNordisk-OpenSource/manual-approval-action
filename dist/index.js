@@ -312,7 +312,7 @@ function validateInput() {
             'GITHUB_RUN_ID',
             'GITHUB_REPOSITORY_OWNER',
             'GITHUB_TOKEN',
-            'APPROVERS',
+            'approvers',
         ];
         const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
         if (missingEnvVars.length > 0) {
