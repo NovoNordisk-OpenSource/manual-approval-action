@@ -365,7 +365,7 @@ async function validateInput(): Promise<void> {
       throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
     }
   }
-  console.log('Input validation pending');
+  console.log('Input validation pending....');
   console.log('Input validation successful');
 }
 

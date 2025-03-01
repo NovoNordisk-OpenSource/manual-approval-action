@@ -49,6 +49,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.config = void 0;
+exports.validateInput = validateInput;
+exports.approvalFromComments = approvalFromComments;
+exports.createApprovalIssue = createApprovalIssue;
+exports.newCommentLoopChannel = newCommentLoopChannel;
+exports.newGithubClient = newGithubClient;
+exports.readAdditionalWords = readAdditionalWords;
+exports.main = main;
 const core = __importStar(__nccwpck_require__(7484));
 const rest_1 = __nccwpck_require__(6145);
 const github_1 = __nccwpck_require__(3228);
@@ -335,7 +343,8 @@ function validateInput() {
             throw new Error('No valid approvers found. Please provide at least one GitHub username.');
         }
         // Validate minimum approvals if provided
-        const minimumApprovals = core.getInput('MINIMUM_APPROVALS');
+        const minimumApprovals = core.getInput('minimum-approvals');
+        console.log(`Minimum approvals: ${minimumApprovals}`);
         if (minimumApprovals) {
             const minApprovalsNum = parseInt(minimumApprovals, 10);
             if (isNaN(minApprovalsNum) || minApprovalsNum < 1) {
@@ -345,6 +354,7 @@ function validateInput() {
                 throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
             }
         }
+        console.log('Input validation pending....');
         console.log('Input validation successful');
     });
 }
@@ -368,7 +378,7 @@ function main() {
             const failOnDenial = FAIL_ON_DENIAL;
             const issueTitle = core.getInput('issue_title');
             const issueBody = core.getInput('issue_body');
-            const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);
+            const minimumApprovals = parseInt(core.getInput('minimum-approvals'), 10);
             const apprv = yield newApprovalEnvironment(client, repoFullName, repoOwner, runID, approvers, minimumApprovals, issueTitle, issueBody, finalTargetRepoOwner, finalTargetRepoName, failOnDenial);
             yield createApprovalIssue(github_1.context, apprv);
             const interval = newCommentLoopChannel(client, apprv);
@@ -384,6 +394,12 @@ function main() {
 }
 // Run the application
 main();
+exports.config = {
+    pollingInterval: 10 * 1000,
+    failOnDenial: true,
+    approvedWords: ['approved', 'approve', 'lgtm', 'yes'],
+    deniedWords: ['denied', 'deny', 'no'],
+};
 
 
 /***/ }),

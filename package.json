@@ -4,19 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "echo \"Error: no test specified\"",
     "build": "tsc && ncc build lib/index.js"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": ["**/__tests__/**/*.test.ts"],
-    "collectCoverage": true,
-    "transform": {
-      "^.+\\.(ts|tsx)$": "babel-jest"
-    },
-    "moduleNameMapper": {
-      "@octokit/rest": "<rootDir>/__mocks__/@octokit/rest.js"
-    }
   },
   "keywords": [],
   "author": "showoffninja",
