@@ -314,17 +314,17 @@ function newCommentLoopChannel(client: Octokit, apprv: ApprovalEnvironment): Nod
 
 // GitHub client
 async function newGithubClient(): Promise<Octokit> {
-  const token = core.getInput('GITHUB_TOKEN');
+  const token = core.getInput('secret');
   return new Octokit({ auth: token });
 }
 
 // Input validation
 async function validateInput(): Promise<void> {
   const requiredEnvVars = [
-    'GITHUB_REPOSITORY',
-    'GITHUB_RUN_ID',
-    'GITHUB_REPOSITORY_OWNER',
-    'GITHUB_TOKEN',
+//    'GITHUB_REPOSITORY',
+//    'GITHUB_RUN_ID',
+//    'GITHUB_REPOSITORY_OWNER',
+    'secret',
     'approvers',
   ];
 
