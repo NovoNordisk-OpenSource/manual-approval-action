@@ -320,18 +320,41 @@ async function newGithubClient(): Promise<Octokit> {
 
 // Input validation
 async function validateInput(): Promise<void> {
-  const requiredEnvVars = [
-//    'GITHUB_REPOSITORY',
-//    'GITHUB_RUN_ID',
-//    'GITHUB_REPOSITORY_OWNER',
-    'secret',
-    'approvers',
-  ];
-  console.log('GITHUB_TOKEN:', process.env.secret);
-  const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-  if (missingEnvVars.length > 0) {
-    throw new Error(`Missing env vars: ${missingEnvVars.join(', ')}`);
+  console.log('Validating required inputs...');
+  
+  // Check for secret/token
+  const secret = core.getInput('secret');
+  if (!secret) {
+    throw new Error('Required input "secret" is missing. Please provide a GitHub token.');
   }
+  
+  // Check for approvers
+  const approvers = core.getInput('approvers');
+  if (!approvers) {
+    throw new Error('Required input "approvers" is missing. Please provide a comma-separated list of GitHub usernames.');
+  }
+  
+  // Validate approvers format
+  const approversList = approvers.split(',').map(approver => approver.trim()).filter(Boolean);
+  console.log(`Found ${approversList.length} approvers: ${approversList.join(', ')}`);
+  
+  if (approversList.length === 0) {
+    throw new Error('No valid approvers found. Please provide at least one GitHub username.');
+  }
+  
+  // Validate minimum approvals if provided
+  const minimumApprovals = core.getInput('MINIMUM_APPROVALS');
+  if (minimumApprovals) {
+    const minApprovalsNum = parseInt(minimumApprovals, 10);
+    if (isNaN(minApprovalsNum) || minApprovalsNum < 1) {
+      throw new Error('MINIMUM_APPROVALS must be a positive number.');
+    }
+    if (minApprovalsNum > approversList.length) {
+      throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
+    }
+  }
+  
+  console.log('Input validation successful');
 }
 
 // Main function
