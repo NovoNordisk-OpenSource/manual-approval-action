@@ -17,7 +17,7 @@ jest.useFakeTimers();
 let mockedApprovalStatus = "pending";
 
 // Mock the interval timers 
-let mockInterval: NodeJS.Timeout;
+let mockInterval: NodeJS.Timeout | undefined;
 
 // Mock the src/index module
 jest.mock('../src/index', () => {
@@ -80,8 +80,8 @@ jest.mock('../src/index', () => {
 });
 
 describe('Main Workflow', () => {
-  let originalConsoleLog;
-  let originalConsoleError;
+  let originalConsoleLog: typeof console.log;
+  let originalConsoleError: typeof console.error;
 
   beforeEach(() => {
     jest.resetAllMocks();

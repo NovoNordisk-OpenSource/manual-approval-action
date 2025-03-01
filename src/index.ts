@@ -353,7 +353,7 @@ async function validateInput(): Promise<void> {
   }
   
   // Validate minimum approvals if provided
-  const minimumApprovals = core.getInput('MINIMUM_APPROVALS');
+  const minimumApprovals = core.getInput('minimum-approvals');
   if (minimumApprovals) {
     const minApprovalsNum = parseInt(minimumApprovals, 10);
     if (isNaN(minApprovalsNum) || minApprovalsNum < 1) {
