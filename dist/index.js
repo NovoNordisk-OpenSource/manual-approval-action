@@ -52,7 +52,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const rest_1 = __nccwpck_require__(6145);
 const github_1 = __nccwpck_require__(3228);
-const process = __importStar(__nccwpck_require__(932));
+// import * as process from 'process';
 const fs = __importStar(__nccwpck_require__(9896));
 // Constants
 const pollingInterval = 10 * 1000; // 10 seconds in milliseconds
@@ -30449,14 +30449,6 @@ module.exports = require("path");
 
 "use strict";
 module.exports = require("perf_hooks");
-
-/***/ }),
-
-/***/ 932:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("process");
 
 /***/ }),
 

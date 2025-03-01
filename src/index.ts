@@ -3,7 +3,7 @@ import * as github from '@actions/github';
 import { Octokit } from '@octokit/rest';
 import { RestEndpointMethodTypes } from '@octokit/rest';
 import { context } from '@actions/github';
-import * as process from 'process';
+// import * as process from 'process';
 import * as fs from 'fs';
 import * as path from 'path';
 
