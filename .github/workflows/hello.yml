@@ -13,8 +13,7 @@ jobs:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: showoffninja, ghostninja840
           minimum-approvals: 1
-          issue-title: "Deploying v1.3.5 to prod from staging"
           issue-body: "Please approve or deny the deployment of version v1.3.5."
-          exclude-workflow-initiator-as-approver: false
+          exclude-workflow-initiator-as-approver: true
           additional-approved-words: "sally, nelson, godkendt"
           additional-denied-words: ""

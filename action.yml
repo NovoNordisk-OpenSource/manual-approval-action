@@ -14,18 +14,18 @@ inputs:
   approvers: 
     description: "Comma separated list of users or teams who can approve the deployment"
     required: true
-    default: "showoffninja"
+    default: "primaryApprover"
   minimum-approvals:
     description: "Minimum number of approvals required"
     required: true
     default: 1
   issue-title:
     description: "Title of the issue created for approval"
-    required: true
-    default: "Deploying v1.3.5 to prod from staging"
+    required: false
+    default: "Manual approval required for workflow run ${{ github.run_id }}"
   issue-body:
-    description: "Body of the issue created for approval"
-    required: true
+    description: "Additional information in the issue created for approval, i.e. link to changed files or docs"
+    required: False
     default: "Please approve or deny the deployment of version v1.3.5."
   exclude-workflow-initiator-as-approver:
     description: "Exclude the workflow initiator as an approver"
