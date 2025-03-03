@@ -232,7 +232,7 @@ async function retrieveApprovers(client: Octokit, repoOwner: string): Promise<st
   return approversInput.split(',').map(approver => approver.trim());
 }
 
-// Action Output
+// Action Output - NEVER USED!
 async function setActionOutput(name: string, value: string): Promise<void> {
   const outputPath = process.env.GITHUB_OUTPUT;
   if (!outputPath) {
