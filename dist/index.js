@@ -65,21 +65,21 @@ const fs = __importStar(__nccwpck_require__(9896));
 // Constants
 const pollingInterval = 60 * 1000; // 1 minute in milliseconds
 const FAIL_ON_DENIAL = true;
-const envVarRepoFullName = 'GITHUB_REPOSITORY';
-const envVarRunID = 'GITHUB_RUN_ID';
-const envVarRepoOwner = 'GITHUB_REPOSITORY_OWNER';
-const envVarWorkflowInitiator = 'GITHUB_ACTOR';
-const envVarToken = 'INPUT_SECRET';
+// const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
+// const envVarRunID: string = 'GITHUB_RUN_ID';
+// const envVarRepoOwner: string = 'GITHUB_REPOSITORY_OWNER';
+// const envVarWorkflowInitiator: string = 'GITHUB_ACTOR';
+// const envVarToken: string = 'INPUT_SECRET';
 const envVarApprovers = core.getInput('approvers');
-const envVarMinimumApprovals = 'INPUT_MINIMUM-APPROVALS';
-const envVarIssueTitle = 'INPUT_ISSUE-TITLE';
-const envVarIssueBody = 'INPUT_ISSUE-BODY';
-const envVarExcludeWorkflowInitiatorAsApprover = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
+// const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
+// const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
+// const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
+// const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
 const envVarAdditionalApprovedWords = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords = core.getInput('additional-denied-words');
-const envVarFailOnDenial = 'INPUT_FAIL-ON-DENIAL';
-const envVarTargetRepoOwner = 'INPUT_TARGET-REPOSITORY-OWNER';
-const envVarTargetRepo = 'INPUT_TARGET-REPOSITORY';
+// const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
+// const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
+// const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
 function readAdditionalWords(envVar) {
     const rawValue = (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '';
     if (rawValue.length === 0) {
@@ -230,7 +230,7 @@ function retrieveApprovers(client, repoOwner) {
         return approversInput.split(',').map(approver => approver.trim());
     });
 }
-// Action Output
+// Action Output - NEVER USED!
 function setActionOutput(name, value) {
     return __awaiter(this, void 0, void 0, function* () {
         const outputPath = process.env.GITHUB_OUTPUT;
@@ -312,6 +312,10 @@ function newCommentLoopChannel(client, apprv) {
                     issue_number: apprv.approvalIssueNumber,
                     state: newState,
                 });
+                // Fail the workflow if the failOnDenial input is set to true and issue is denied
+                if (apprv.failOnDenial) {
+                    core.setFailed('Workflow denied by approver');
+                }
                 clearInterval(interval);
             }
         }

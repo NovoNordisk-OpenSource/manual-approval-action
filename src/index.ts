@@ -11,21 +11,21 @@ import * as path from 'path';
 const pollingInterval: number = 60 * 1000; // 1 minute in milliseconds
 
 const FAIL_ON_DENIAL:boolean = true;
-const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
-const envVarRunID: string = 'GITHUB_RUN_ID';
-const envVarRepoOwner: string = 'GITHUB_REPOSITORY_OWNER';
-const envVarWorkflowInitiator: string = 'GITHUB_ACTOR';
-const envVarToken: string = 'INPUT_SECRET';
+// const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
+// const envVarRunID: string = 'GITHUB_RUN_ID';
+// const envVarRepoOwner: string = 'GITHUB_REPOSITORY_OWNER';
+// const envVarWorkflowInitiator: string = 'GITHUB_ACTOR';
+// const envVarToken: string = 'INPUT_SECRET';
 const envVarApprovers: string = core.getInput('approvers');
-const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
-const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
-const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
-const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
+// const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
+// const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
+// const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
+// const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
 const envVarAdditionalApprovedWords: string = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords: string = core.getInput('additional-denied-words');
-const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
-const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
-const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
+// const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
+// const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
+// const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
 
 function readAdditionalWords(envVar: string): string[] {
   const rawValue = envVar?.trim() || '';
@@ -321,6 +321,11 @@ function newCommentLoopChannel(client: Octokit, apprv: ApprovalEnvironment): Nod
           issue_number: apprv.approvalIssueNumber,
           state: newState,
         });
+
+        // Fail the workflow if the failOnDenial input is set to true and issue is denied
+        if (apprv.failOnDenial) {
+          core.setFailed('Workflow denied by approver');
+        }
 
         clearInterval(interval);
       }
