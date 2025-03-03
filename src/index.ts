@@ -209,8 +209,9 @@ async function approvalFromComments(
     // If the initiator was the only approver, we have a problem - fail the workflow
     if (approverSet.size === 0) {
       console.error('Workflow initiator was the only approver');
-      return ApprovalStatusPending
+      core.setFailed('Workflow initiator was the only approver');
     }
+     
   }
   
   const approvedBy = new Set<string>();
