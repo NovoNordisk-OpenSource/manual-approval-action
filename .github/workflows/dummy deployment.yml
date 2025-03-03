@@ -17,3 +17,4 @@ jobs:
       - name: Starting pending deployments
         id: Start Deployments
         env: development
+        run: echo "Starting pending deployments"
