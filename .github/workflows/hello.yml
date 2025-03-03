@@ -11,7 +11,7 @@ jobs:
       - uses: ./ # This is the path to the action.yml file
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: showoffninja, ghostninja840
+          approvers: showoffninja
           minimum-approvals: 1
           issue-body: "Please approve or deny the deployment of version v1.3.5."
           exclude-workflow-initiator-as-approver: true
