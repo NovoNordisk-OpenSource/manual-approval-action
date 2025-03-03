@@ -63,7 +63,7 @@ const github_1 = __nccwpck_require__(3228);
 // import * as process from 'process';
 const fs = __importStar(__nccwpck_require__(9896));
 // Constants
-const pollingInterval = 10 * 1000; // 10 seconds in milliseconds
+const pollingInterval = 60 * 1000; // 1 minute in milliseconds
 const FAIL_ON_DENIAL = true;
 const envVarRepoFullName = 'GITHUB_REPOSITORY';
 const envVarRunID = 'GITHUB_RUN_ID';

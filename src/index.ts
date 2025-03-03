@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Constants
-const pollingInterval: number = 10 * 1000; // 10 seconds in milliseconds
+const pollingInterval: number = 60 * 1000; // 1 minute in milliseconds
 
 const FAIL_ON_DENIAL:boolean = true;
 const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
