@@ -7,20 +7,10 @@ jobs:
   get_run_id:
     runs-on: ubuntu-latest
     steps:
-      - name: Get the run ID
-        id: Get Run ID
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          const { data } = await github.rest.actions.listWorkflowRuns({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            workflow_id: context.workflow,
-            status: 'in_progress'
-          });
-          const runId = data.workflow_runs[0].id;
-          core.setOutput('run_id', runId);
+      - name: Echo the run_id
+        id: echo_run_id
+        run: echo "The run_id is ${{ github.run_id }}"
+        shell: bash
   approve:
     runs-on: ubuntu-latest
     steps:
