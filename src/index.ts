@@ -3,39 +3,51 @@ import * as github from '@actions/github';
 import { Octokit } from '@octokit/rest';
 import { RestEndpointMethodTypes } from '@octokit/rest';
 import { context } from '@actions/github';
-import * as process from 'process';
+// import * as process from 'process';
 import * as fs from 'fs';
 import * as path from 'path';
 
 // Constants
 const pollingInterval: number = 10 * 1000; // 10 seconds in milliseconds
 
+const FAIL_ON_DENIAL:boolean = true;
 const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
 const envVarRunID: string = 'GITHUB_RUN_ID';
 const envVarRepoOwner: string = 'GITHUB_REPOSITORY_OWNER';
 const envVarWorkflowInitiator: string = 'GITHUB_ACTOR';
 const envVarToken: string = 'INPUT_SECRET';
-const envVarApprovers: string = 'INPUT_APPROVERS';
+const envVarApprovers: string = core.getInput('approvers');
 const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
 const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
 const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
 const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
-const envVarAdditionalApprovedWords: string = 'INPUT_ADDITIONAL-APPROVED-WORDS';
-const envVarAdditionalDeniedWords: string = 'INPUT_ADDITIONAL-DENIED-WORDS';
+const envVarAdditionalApprovedWords: string = core.getInput('additional-approved-words');
+const envVarAdditionalDeniedWords: string = core.getInput('additional-denied-words');
 const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
 const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
 const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
 
 function readAdditionalWords(envVar: string): string[] {
-  const rawValue = process.env[envVar]?.trim() || '';
+  const rawValue = envVar?.trim() || '';
   if (rawValue.length === 0) {
     return [];
   }
   return rawValue.split(',').map(word => word.trim());
 }
 
+function readApproversList(envVar: string): string[] {
+  const rawValue = envVar?.trim() || '';
+  if (rawValue.length === 0) {
+    return [];
+  }
+  return rawValue.split(',').map(approver => approver.trim());
+}
+
+console.log('Approvers:', readApproversList(envVarApprovers));
+
 const additionalApprovedWords: string[] = readAdditionalWords(envVarAdditionalApprovedWords);
 const additionalDeniedWords: string[] = readAdditionalWords(envVarAdditionalDeniedWords);
+
 
 const approvedWords: string[] = ['approved', 'approve', 'lgtm', 'yes', ...additionalApprovedWords];
 const deniedWords: string[] = ['denied', 'deny', 'no', ...additionalDeniedWords];
@@ -173,7 +185,7 @@ async function approvalFromComments(
 
   for (const comment of comments) {
     const commentUser = comment.user?.login?.toLowerCase();
-
+    console.log(`Comment by ${commentUser}: ${comment.body}`);
     if (!commentUser || !approverSet.has(commentUser)) {
       continue;
     }
@@ -183,10 +195,19 @@ async function approvalFromComments(
     const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
     const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
 
+    console.log(`Checking comment: "${commentBody}"`);
+    console.log(`Approved words: ${approvedWords.join(', ')}`);
+    console.log(`Denied words: ${deniedWords.join(', ')}`);
+    console.log(`Is approval: ${isApproval}, Is denial: ${isDenial}`);
+
     if (isApproval) {
       approvedBy.add(commentUser);
+      console.log(`User ${commentUser} approved`);
+      return ApprovalStatusApproved;
     } else if (isDenial) {
       deniedBy.add(commentUser);
+      console.log(`User ${commentUser} denied`);
+      return ApprovalStatusDenied;
     }
   }
 
@@ -201,7 +222,7 @@ async function approvalFromComments(
   return ApprovalStatusPending;
 }
 
-// Retrieves the list of approvers
+// Retrieves the list of approvers - NEVER USED!
 async function retrieveApprovers(client: Octokit, repoOwner: string): Promise<string[]> {
   const approversInput = core.getInput('APPROVERS');
   if (!approversInput) {
@@ -314,24 +335,47 @@ function newCommentLoopChannel(client: Octokit, apprv: ApprovalEnvironment): Nod
 
 // GitHub client
 async function newGithubClient(): Promise<Octokit> {
-  const token = core.getInput('GITHUB_TOKEN');
+  const token = core.getInput('secret');
   return new Octokit({ auth: token });
 }
 
 // Input validation
 async function validateInput(): Promise<void> {
-  const requiredEnvVars = [
-    'GITHUB_REPOSITORY',
-    'GITHUB_RUN_ID',
-    'GITHUB_REPOSITORY_OWNER',
-    'GITHUB_TOKEN',
-    'approvers',
-  ];
-
-  const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-  if (missingEnvVars.length > 0) {
-    throw new Error(`Missing env vars: ${missingEnvVars.join(', ')}`);
+  console.log('Validating required inputs...');
+  
+  // Check for secret/token
+  const secret = core.getInput('secret');
+  if (!secret) {
+    throw new Error('Required input "secret" is missing. Please provide a GitHub token.');
   }
+  
+  // Check for approvers
+  const approvers = core.getInput('approvers');
+  if (!approvers) {
+    throw new Error('Required input "approvers" is missing. Please provide a comma-separated list of GitHub usernames.');
+  }
+  
+  // Validate approvers format
+  const approversList = approvers.split(',').map(approver => approver.trim()).filter(Boolean);
+  console.log(`Found ${approversList.length} approvers: ${approversList.join(', ')}`);
+  
+  if (approversList.length === 0) {
+    throw new Error('No valid approvers found. Please provide at least one GitHub username.');
+  }
+  
+  // Validate minimum approvals if provided
+  const minimumApprovals = core.getInput('minimum-approvals');
+
+  if (minimumApprovals) {
+    const minApprovalsNum = parseInt(minimumApprovals, 10);
+    if (isNaN(minApprovalsNum) || minApprovalsNum < 1) {
+      throw new Error('MINIMUM_APPROVALS must be a positive number.');
+    }
+    if (minApprovalsNum > approversList.length) {
+      throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
+    }
+  }
+  console.log('Input validation successful');
 }
 
 // Main function
@@ -348,14 +392,18 @@ async function main(): Promise<void> {
     const [owner, repo] = repoFullName.split('/');
     const finalTargetRepoOwner = targetRepoOwner || owner;
     const finalTargetRepoName = targetRepoName || repo;
+    console.log('targetRepoOwner:', finalTargetRepoOwner);
+    console.log('targetRepoName:', finalTargetRepoName);
 
     const client = await newGithubClient();
 
-    const approvers = core.getInput('APPROVERS').split(',');
-    const failOnDenial = core.getBooleanInput('FAIL_ON_DENIAL');
-    const issueTitle = core.getInput('ISSUE_TITLE');
-    const issueBody = core.getInput('ISSUE_BODY');
-    const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);
+    // const approvers = core.getInput('approvers').split(',');
+    const approvers = readApproversList(envVarApprovers);
+    const failOnDenial = FAIL_ON_DENIAL;
+    
+    const issueTitle = core.getInput('issue_title');
+    const issueBody = core.getInput('issue_body');
+    const minimumApprovals = parseInt(core.getInput('minimum-approvals'), 10);
 
     const apprv: ApprovalEnvironment = await newApprovalEnvironment(
       client,
@@ -386,3 +434,20 @@ async function main(): Promise<void> {
 
 // Run the application
 main();
+
+export {
+  validateInput,
+  approvalFromComments,
+  createApprovalIssue,
+  newCommentLoopChannel,
+  newGithubClient,
+  readAdditionalWords,
+  main
+};
+
+export const config = {
+  pollingInterval: 10 * 1000,
+  failOnDenial: true,
+  approvedWords: ['approved', 'approve', 'lgtm', 'yes'],
+  deniedWords: ['denied', 'deny', 'no'],
+};

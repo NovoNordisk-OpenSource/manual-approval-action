@@ -49,36 +49,52 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.config = void 0;
+exports.validateInput = validateInput;
+exports.approvalFromComments = approvalFromComments;
+exports.createApprovalIssue = createApprovalIssue;
+exports.newCommentLoopChannel = newCommentLoopChannel;
+exports.newGithubClient = newGithubClient;
+exports.readAdditionalWords = readAdditionalWords;
+exports.main = main;
 const core = __importStar(__nccwpck_require__(7484));
 const rest_1 = __nccwpck_require__(6145);
 const github_1 = __nccwpck_require__(3228);
-const process = __importStar(__nccwpck_require__(932));
+// import * as process from 'process';
 const fs = __importStar(__nccwpck_require__(9896));
 // Constants
 const pollingInterval = 10 * 1000; // 10 seconds in milliseconds
+const FAIL_ON_DENIAL = true;
 const envVarRepoFullName = 'GITHUB_REPOSITORY';
 const envVarRunID = 'GITHUB_RUN_ID';
 const envVarRepoOwner = 'GITHUB_REPOSITORY_OWNER';
 const envVarWorkflowInitiator = 'GITHUB_ACTOR';
 const envVarToken = 'INPUT_SECRET';
-const envVarApprovers = 'INPUT_APPROVERS';
+const envVarApprovers = core.getInput('approvers');
 const envVarMinimumApprovals = 'INPUT_MINIMUM-APPROVALS';
 const envVarIssueTitle = 'INPUT_ISSUE-TITLE';
 const envVarIssueBody = 'INPUT_ISSUE-BODY';
 const envVarExcludeWorkflowInitiatorAsApprover = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
-const envVarAdditionalApprovedWords = 'INPUT_ADDITIONAL-APPROVED-WORDS';
-const envVarAdditionalDeniedWords = 'INPUT_ADDITIONAL-DENIED-WORDS';
+const envVarAdditionalApprovedWords = core.getInput('additional-approved-words');
+const envVarAdditionalDeniedWords = core.getInput('additional-denied-words');
 const envVarFailOnDenial = 'INPUT_FAIL-ON-DENIAL';
 const envVarTargetRepoOwner = 'INPUT_TARGET-REPOSITORY-OWNER';
 const envVarTargetRepo = 'INPUT_TARGET-REPOSITORY';
 function readAdditionalWords(envVar) {
-    var _a;
-    const rawValue = ((_a = process.env[envVar]) === null || _a === void 0 ? void 0 : _a.trim()) || '';
+    const rawValue = (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '';
     if (rawValue.length === 0) {
         return [];
     }
     return rawValue.split(',').map(word => word.trim());
 }
+function readApproversList(envVar) {
+    const rawValue = (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '';
+    if (rawValue.length === 0) {
+        return [];
+    }
+    return rawValue.split(',').map(approver => approver.trim());
+}
+console.log('Approvers:', readApproversList(envVarApprovers));
 const additionalApprovedWords = readAdditionalWords(envVarAdditionalApprovedWords);
 const additionalDeniedWords = readAdditionalWords(envVarAdditionalDeniedWords);
 const approvedWords = ['approved', 'approve', 'lgtm', 'yes', ...additionalApprovedWords];
@@ -173,17 +189,26 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
         const deniedBy = new Set();
         for (const comment of comments) {
             const commentUser = (_b = (_a = comment.user) === null || _a === void 0 ? void 0 : _a.login) === null || _b === void 0 ? void 0 : _b.toLowerCase();
+            console.log(`Comment by ${commentUser}: ${comment.body}`);
             if (!commentUser || !approverSet.has(commentUser)) {
                 continue;
             }
             const commentBody = ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || '';
             const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
             const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
+            console.log(`Checking comment: "${commentBody}"`);
+            console.log(`Approved words: ${approvedWords.join(', ')}`);
+            console.log(`Denied words: ${deniedWords.join(', ')}`);
+            console.log(`Is approval: ${isApproval}, Is denial: ${isDenial}`);
             if (isApproval) {
                 approvedBy.add(commentUser);
+                console.log(`User ${commentUser} approved`);
+                return ApprovalStatusApproved;
             }
             else if (isDenial) {
                 deniedBy.add(commentUser);
+                console.log(`User ${commentUser} denied`);
+                return ApprovalStatusDenied;
             }
         }
         if (deniedBy.size > 0) {
@@ -195,7 +220,7 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
         return ApprovalStatusPending;
     });
 }
-// Retrieves the list of approvers
+// Retrieves the list of approvers - NEVER USED!
 function retrieveApprovers(client, repoOwner) {
     return __awaiter(this, void 0, void 0, function* () {
         const approversInput = core.getInput('APPROVERS');
@@ -300,24 +325,42 @@ function newCommentLoopChannel(client, apprv) {
 // GitHub client
 function newGithubClient() {
     return __awaiter(this, void 0, void 0, function* () {
-        const token = core.getInput('GITHUB_TOKEN');
+        const token = core.getInput('secret');
         return new rest_1.Octokit({ auth: token });
     });
 }
 // Input validation
 function validateInput() {
     return __awaiter(this, void 0, void 0, function* () {
-        const requiredEnvVars = [
-            'GITHUB_REPOSITORY',
-            'GITHUB_RUN_ID',
-            'GITHUB_REPOSITORY_OWNER',
-            'GITHUB_TOKEN',
-            'APPROVERS',
-        ];
-        const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-        if (missingEnvVars.length > 0) {
-            throw new Error(`Missing env vars: ${missingEnvVars.join(', ')}`);
+        console.log('Validating required inputs...');
+        // Check for secret/token
+        const secret = core.getInput('secret');
+        if (!secret) {
+            throw new Error('Required input "secret" is missing. Please provide a GitHub token.');
         }
+        // Check for approvers
+        const approvers = core.getInput('approvers');
+        if (!approvers) {
+            throw new Error('Required input "approvers" is missing. Please provide a comma-separated list of GitHub usernames.');
+        }
+        // Validate approvers format
+        const approversList = approvers.split(',').map(approver => approver.trim()).filter(Boolean);
+        console.log(`Found ${approversList.length} approvers: ${approversList.join(', ')}`);
+        if (approversList.length === 0) {
+            throw new Error('No valid approvers found. Please provide at least one GitHub username.');
+        }
+        // Validate minimum approvals if provided
+        const minimumApprovals = core.getInput('minimum-approvals');
+        if (minimumApprovals) {
+            const minApprovalsNum = parseInt(minimumApprovals, 10);
+            if (isNaN(minApprovalsNum) || minApprovalsNum < 1) {
+                throw new Error('MINIMUM_APPROVALS must be a positive number.');
+            }
+            if (minApprovalsNum > approversList.length) {
+                throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
+            }
+        }
+        console.log('Input validation successful');
     });
 }
 // Main function
@@ -333,12 +376,15 @@ function main() {
             const [owner, repo] = repoFullName.split('/');
             const finalTargetRepoOwner = targetRepoOwner || owner;
             const finalTargetRepoName = targetRepoName || repo;
+            console.log('targetRepoOwner:', finalTargetRepoOwner);
+            console.log('targetRepoName:', finalTargetRepoName);
             const client = yield newGithubClient();
-            const approvers = core.getInput('APPROVERS').split(',');
-            const failOnDenial = core.getBooleanInput('FAIL_ON_DENIAL');
-            const issueTitle = core.getInput('ISSUE_TITLE');
-            const issueBody = core.getInput('ISSUE_BODY');
-            const minimumApprovals = parseInt(core.getInput('MINIMUM_APPROVALS'), 10);
+            // const approvers = core.getInput('approvers').split(',');
+            const approvers = readApproversList(envVarApprovers);
+            const failOnDenial = FAIL_ON_DENIAL;
+            const issueTitle = core.getInput('issue_title');
+            const issueBody = core.getInput('issue_body');
+            const minimumApprovals = parseInt(core.getInput('minimum-approvals'), 10);
             const apprv = yield newApprovalEnvironment(client, repoFullName, repoOwner, runID, approvers, minimumApprovals, issueTitle, issueBody, finalTargetRepoOwner, finalTargetRepoName, failOnDenial);
             yield createApprovalIssue(github_1.context, apprv);
             const interval = newCommentLoopChannel(client, apprv);
@@ -354,6 +400,12 @@ function main() {
 }
 // Run the application
 main();
+exports.config = {
+    pollingInterval: 10 * 1000,
+    failOnDenial: true,
+    approvedWords: ['approved', 'approve', 'lgtm', 'yes'],
+    deniedWords: ['denied', 'deny', 'no'],
+};
 
 
 /***/ }),
@@ -30428,14 +30480,6 @@ module.exports = require("path");
 
 "use strict";
 module.exports = require("perf_hooks");
-
-/***/ }),
-
-/***/ 932:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("process");
 
 /***/ }),
 
