@@ -60,31 +60,17 @@ exports.main = main;
 const core = __importStar(__nccwpck_require__(7484));
 const rest_1 = __nccwpck_require__(6145);
 const github_1 = __nccwpck_require__(3228);
-// import * as process from 'process';
-const fs = __importStar(__nccwpck_require__(9896));
 // Constants
 // Interval to poll for new comments in milliseconds
-// const pollingInterval: number = 60 * 1000; // 1 minute in milliseconds
+const pollingInterval = 60 * 1000; // 1 minute in milliseconds
 // Interval for polling for new comments - debugging
-const pollingInterval = 10 * 1000; // 10 seconds in milliseconds
+//const pollingInterval: number = 10 * 1000; // 10 seconds in milliseconds
 const FAIL_ON_DENIAL = true;
 const EXCLUDE_WORKFLOW_INITIATOR = core.getBooleanInput('exclude-workflow-initiator-as-approver');
 const WORKFLOW_INITIATOR = process.env.GITHUB_ACTOR || '';
-// const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
-// const envVarRunID: string = 'GITHUB_RUN_ID';
-// const envVarRepoOwner: string = 'GITHUB_REPOSITORY_OWNER';
-// const envVarWorkflowInitiator: string = 'GITHUB_ACTOR';
-// const envVarToken: string = 'INPUT_SECRET';
 const envVarApprovers = core.getInput('approvers');
-// const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
-// const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
-// const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
-// const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
 const envVarAdditionalApprovedWords = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords = core.getInput('additional-denied-words');
-// const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
-// const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
-// const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
 function readAdditionalWords(envVar) {
     const rawValue = (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '';
     if (rawValue.length === 0) {
@@ -170,14 +156,6 @@ ${approversBody}
 * If denied, the workflow will continue unless the \`fail-on-denial\` input is set to true.
 * A minimum of ${a.minimumApprovals} ${a.minimumApprovals > 1 ? 'approvals are' : 'approval is'} required.
 `;
-        /*   if (a.issueBody) {
-            bodyMessage = a.issueBody
-              .replace('{run_id}', `${a.runID}`)
-              .replace('{run_url}', runURL(a))
-              .replace('{repo}', a.repoFullName)
-              .replace('{approvers}', approversBody)
-              .replace('{minimum_approvals}', `${a.minimumApprovals}`);
-          } */
         if (a.issueBody) {
             const customBody = a.issueBody
                 .replace('{run_id}', `${a.runID}`)
@@ -255,68 +233,29 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
             return ApprovalStatusApproved;
         }
         return ApprovalStatusPending;
-        // rewriting the logic to check for approvals
-        /*
-        // Loop through the comments to check for approvals
-        for (const comment of comments) {
-          const commentUser = comment.user?.login?.toLowerCase();
-          console.log(`Comment by ${commentUser}: ${comment.body}`);
-          if (!commentUser || !approverSet.has(commentUser)) {
-            continue;
-          }
-      
-          const commentBody = comment.body?.toLowerCase() || '';
-          
-          const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
-          const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
-      
-          console.log(`Checking comment: "${commentBody}"`);
-          console.log(`Approved words: ${approvedWords.join(', ')}`);
-          console.log(`Denied words: ${deniedWords.join(', ')}`);
-          console.log(`Is approval: ${isApproval}, Is denial: ${isDenial}`);
-      
-          if (isApproval) {
-            approvedBy.add(commentUser);
-            console.log(`User ${commentUser} approved`);
-            return ApprovalStatusApproved;
-          } else if (isDenial) {
-            deniedBy.add(commentUser);
-            console.log(`User ${commentUser} denied`);
-            return ApprovalStatusDenied;
-          }
-        }
-      
-        if (deniedBy.size > 0) {
-          return ApprovalStatusDenied;
-        }
-      
-        if (approvedBy.size >= minimumApprovals) {
-          return ApprovalStatusApproved;
-        }
-      
-        return ApprovalStatusPending; */
     });
 }
+/*
 // Retrieves the list of approvers - NEVER USED!
-function retrieveApprovers(client, repoOwner) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const approversInput = core.getInput('APPROVERS');
-        if (!approversInput) {
-            throw new Error('No approvers specified');
-        }
-        return approversInput.split(',').map(approver => approver.trim());
-    });
+async function retrieveApprovers(client: Octokit, repoOwner: string): Promise<string[]> {
+  const approversInput = core.getInput('APPROVERS');
+  if (!approversInput) {
+    throw new Error('No approvers specified');
+  }
+
+  return approversInput.split(',').map(approver => approver.trim());
 }
+
 // Action Output - NEVER USED!
-function setActionOutput(name, value) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const outputPath = process.env.GITHUB_OUTPUT;
-        if (!outputPath) {
-            throw new Error('GITHUB_OUTPUT environment variable is not set');
-        }
-        yield fs.promises.appendFile(outputPath, `${name}=${value}\n`);
-    });
+async function setActionOutput(name: string, value: string): Promise<void> {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (!outputPath) {
+    throw new Error('GITHUB_OUTPUT environment variable is not set');
+  }
+
+  await fs.promises.appendFile(outputPath, `${name}=${value}\n`);
 }
+ */
 // Handle interrupt
 function handleInterrupt(client, apprv) {
     return __awaiter(this, void 0, void 0, function* () {
