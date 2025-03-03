@@ -16,5 +16,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Starting pending deployments
-        id: Start Deployments
+        id: Start_Deployments
         run: echo "Starting pending deployments"
