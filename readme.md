@@ -36,6 +36,8 @@ This action is available in the GitHub Actions Marketplace. Simply reference it 
   with:
     secret: ${{ secrets.GITHUB_TOKEN }}
     approvers: user1,user2,user3
+    minimum-approvals: 2
+    exclude-workflow-initiator-as-approver: false
 ```
 
 ## Example Workflow
@@ -66,16 +68,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Request manual approval
-        uses: your-username/manual-approval-action-ts@v1
+        uses: showoffninja/manual-approval-action-ts@main
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: user1,user2,user3
-          MINIMUM_APPROVALS: 2
+          approvers: some_approver # This must be Github Users
+          minimum-approvals: 1
+          issue-body: |
+            ## Deployment Request
 
-      - name: Deploy to production
-        run: |
-          echo "Deploying to production..."
-        # Your deployment commands here
+            We're requesting approval to deploy **version v1.3.5** to production.
+
+            ### Changes in this release
+
+            - ✨ Added new feature for user authentication
+            - 🐛 Fixed critical bug in payment processing
+            - 🔒 Improved security for API endpoints
+
+            ### Links
+
+            - [View Release Notes](https://github.com/some-repository/manual-approval-action-ts/releases/tag/v1.3.5)
+            - [Compare with previous version](https://github.com/some-repository/manual-approval-action-ts/compare/v1.3.4...v1.3.5)
+            - [Deployment Documentation](https://github.com/some-repository/manual-approval-action-ts/wiki/Deployment)
+
+            ### Impact Assessment
+
+            - **Risk Level**: Low
+            - **Services Affected**: Authentication, Payment
+            - **Downtime Required**: None
+
+            Please review and approve this deployment request. The workflow run ID is {run_id}.
+          exclude-workflow-initiator-as-approver: false
+          additional-approved-words: "approved-word-1, approved-word-2"
+          additional-denied-words: "debnied-word-1, denied-word-2"
+          issue-labels: "My Custom Label"
+
+      # Your workflow commands goes here
 ```
 
 ## Input Parameters
@@ -85,8 +112,8 @@ jobs:
 | `secret`                                 | GitHub token for authentication                                                 | Yes      | N/A                                                  |
 | `approvers`                              | Comma-separated list of GitHub usernames who can approve the request            | Yes      | N/A                                                  |
 | `minimum-approvals`                      | Minimum number of approvals required                                            | No       | 1                                                    |
-| `issue_title`                            | Title of the created issue. Use {run_id} placeholder to include the run ID      | Yes      | "Manual approval required for workflow run {run_id}" |
-| `issue_body`                             | Body of the created issue. Use {run_id} placeholder to include the run ID       | Yes      | "Please approve workflow run {run_id}"               |
+| `issue_title`                            | Title of the created issue. Use {run_id} placeholder to include the run ID      | No       | "Manual approval required for workflow run {run_id}" |
+| `issue_body`                             | Body of the created issue. Use {run_id} placeholder to include the run ID       | No       | "Please approve workflow run {run_id}....."          |
 | `exclude-workflow-initiator-as-approver` | Exclude the workflow initiator as an approver                                   | Yes      | false                                                |
 | `additional-approved-words`              | Comma separated list of additional words that can be used to approve the issue  | No       | ""                                                   |
 | `additional-denied-words`                | Comma separated list of additional words that can be used to deny the issue     | No       | ""                                                   |
@@ -103,9 +130,10 @@ jobs:
 - To approve: Comment with `"approved"`, `"approve"`, `"lgtm"`, or `"yes"`
 - To deny: Comment with `"denied"`, `"deny"`, or `"no"`
 
-4. Once the required number of approvals is reached, the workflow continues
-5. If the request is denied and `fail-on-denial` is enabled, the workflow will fail; otherwise, denial of approval will cause the workflow to be `cancelled`
-6. After completion, the issue is automatically closed
+4. The action monitors the issue comments and look for the specified keywords. The logic filters out comments and sentences that are more than 1 word to avoid false positives.
+5. Once the required number of approvals is reached, the workflow continues
+6. If the request is denied and `fail-on-denial` is enabled, the workflow will fail; otherwise, denial of approval will cause the workflow to be `cancelled`
+7. After completion, the issue is automatically closed
 
 ## Contributing
 
