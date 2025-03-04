@@ -60,26 +60,17 @@ exports.main = main;
 const core = __importStar(__nccwpck_require__(7484));
 const rest_1 = __nccwpck_require__(6145);
 const github_1 = __nccwpck_require__(3228);
-// import * as process from 'process';
-const fs = __importStar(__nccwpck_require__(9896));
 // Constants
+// Interval to poll for new comments in milliseconds
 const pollingInterval = 60 * 1000; // 1 minute in milliseconds
+// Interval for polling for new comments - debugging
+//const pollingInterval: number = 10 * 1000; // 10 seconds in milliseconds
 const FAIL_ON_DENIAL = true;
-const envVarRepoFullName = 'GITHUB_REPOSITORY';
-const envVarRunID = 'GITHUB_RUN_ID';
-const envVarRepoOwner = 'GITHUB_REPOSITORY_OWNER';
-const envVarWorkflowInitiator = 'GITHUB_ACTOR';
-const envVarToken = 'INPUT_SECRET';
+const EXCLUDE_WORKFLOW_INITIATOR = core.getBooleanInput('exclude-workflow-initiator-as-approver');
+const WORKFLOW_INITIATOR = process.env.GITHUB_ACTOR || '';
 const envVarApprovers = core.getInput('approvers');
-const envVarMinimumApprovals = 'INPUT_MINIMUM-APPROVALS';
-const envVarIssueTitle = 'INPUT_ISSUE-TITLE';
-const envVarIssueBody = 'INPUT_ISSUE-BODY';
-const envVarExcludeWorkflowInitiatorAsApprover = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
 const envVarAdditionalApprovedWords = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords = core.getInput('additional-denied-words');
-const envVarFailOnDenial = 'INPUT_FAIL-ON-DENIAL';
-const envVarTargetRepoOwner = 'INPUT_TARGET-REPOSITORY-OWNER';
-const envVarTargetRepo = 'INPUT_TARGET-REPOSITORY';
 function readAdditionalWords(envVar) {
     const rawValue = (envVar === null || envVar === void 0 ? void 0 : envVar.trim()) || '';
     if (rawValue.length === 0) {
@@ -144,6 +135,9 @@ function createApprovalIssue(ctx, a) {
         for (const approver of a.issueApprovers) {
             approversBody += `* @${approver}\n`;
         }
+        // Format the approved and denied words for the issue body
+        const formattedApprovedWords = approvedWords.map(word => `\`${word}\``).join(', ');
+        const formattedDeniedWords = deniedWords.map(word => `\`${word}\``).join(', ');
         let bodyMessage = `
 ## Manual Approval
 Workflow is pending manual approval before proceeding.
@@ -157,18 +151,20 @@ ${approversBody}
 * **Workflow Run:** [${a.runID}](${runURL(a)})
 
 ### Instructions
-* Comment \`approve\` or \`approved\` to approve this workflow.
-* Comment \`deny\` or \`denied\` to deny this workflow.
+* To approve: comment with any of these words: ${formattedApprovedWords}
+* To deny: comment with any of these words: ${formattedDeniedWords}
 * If denied, the workflow will continue unless the \`fail-on-denial\` input is set to true.
 * A minimum of ${a.minimumApprovals} ${a.minimumApprovals > 1 ? 'approvals are' : 'approval is'} required.
 `;
         if (a.issueBody) {
-            bodyMessage = a.issueBody
+            const customBody = a.issueBody
                 .replace('{run_id}', `${a.runID}`)
                 .replace('{run_url}', runURL(a))
                 .replace('{repo}', a.repoFullName)
                 .replace('{approvers}', approversBody)
                 .replace('{minimum_approvals}', `${a.minimumApprovals}`);
+            // Add a separator between the custom body and the default body
+            bodyMessage += '\n---\n\n### Additional Information\n\n' + customBody;
         }
         const { data: issue } = yield a.client.issues.create({
             owner: a.targetRepoOwner,
@@ -184,15 +180,34 @@ ${approversBody}
 function approvalFromComments(comments, approvers, minimumApprovals) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c;
+        // Create a set of valid approvers
         const approverSet = new Set(approvers.map(a => a.toLowerCase()));
+        // If we should exclude the workflow initiator, remove them from the approver set
+        if (EXCLUDE_WORKFLOW_INITIATOR && WORKFLOW_INITIATOR) {
+            console.log(`Excluding workflow initiator ${WORKFLOW_INITIATOR} from approvers`);
+            approverSet.delete(WORKFLOW_INITIATOR.toLowerCase());
+            // If the initiator was the only approver, we have a problem - fail the workflow
+            if (approverSet.size === 0) {
+                console.error('Workflow initiator was the only approver');
+                core.setFailed('Workflow initiator was the only approver');
+            }
+        }
         const approvedBy = new Set();
         const deniedBy = new Set();
+        // Process all the comments and look for approval or denial
         for (const comment of comments) {
             const commentUser = (_b = (_a = comment.user) === null || _a === void 0 ? void 0 : _a.login) === null || _b === void 0 ? void 0 : _b.toLowerCase();
-            console.log(`Comment by ${commentUser}: ${comment.body}`);
-            if (!commentUser || !approverSet.has(commentUser)) {
+            // Skip without a user 
+            if (!commentUser) {
+                console.log(`Skipping comment without user: ${comment.body}`);
                 continue;
             }
+            // the user is not an approver, skip the comment
+            if (!approverSet.has(commentUser)) {
+                console.log(`Comment by ${commentUser}: ${comment.body}`);
+                continue;
+            }
+            // Check for approval or denial words in the comment body
             const commentBody = ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || '';
             const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
             const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
@@ -220,26 +235,27 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
         return ApprovalStatusPending;
     });
 }
+/*
 // Retrieves the list of approvers - NEVER USED!
-function retrieveApprovers(client, repoOwner) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const approversInput = core.getInput('APPROVERS');
-        if (!approversInput) {
-            throw new Error('No approvers specified');
-        }
-        return approversInput.split(',').map(approver => approver.trim());
-    });
+async function retrieveApprovers(client: Octokit, repoOwner: string): Promise<string[]> {
+  const approversInput = core.getInput('APPROVERS');
+  if (!approversInput) {
+    throw new Error('No approvers specified');
+  }
+
+  return approversInput.split(',').map(approver => approver.trim());
 }
-// Action Output
-function setActionOutput(name, value) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const outputPath = process.env.GITHUB_OUTPUT;
-        if (!outputPath) {
-            throw new Error('GITHUB_OUTPUT environment variable is not set');
-        }
-        yield fs.promises.appendFile(outputPath, `${name}=${value}\n`);
-    });
+
+// Action Output - NEVER USED!
+async function setActionOutput(name: string, value: string): Promise<void> {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (!outputPath) {
+    throw new Error('GITHUB_OUTPUT environment variable is not set');
+  }
+
+  await fs.promises.appendFile(outputPath, `${name}=${value}\n`);
 }
+ */
 // Handle interrupt
 function handleInterrupt(client, apprv) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -312,6 +328,10 @@ function newCommentLoopChannel(client, apprv) {
                     issue_number: apprv.approvalIssueNumber,
                     state: newState,
                 });
+                // Fail the workflow if the failOnDenial input is set to true and issue is denied
+                if (apprv.failOnDenial) {
+                    core.setFailed('Workflow denied by approver');
+                }
                 clearInterval(interval);
             }
         }
@@ -360,6 +380,15 @@ function validateInput() {
                 throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
             }
         }
+        // Add validation for exclude-workflow-initiator-as-approver
+        const excludeInitiator = EXCLUDE_WORKFLOW_INITIATOR;
+        if (excludeInitiator) {
+            console.log(`Workflow initiator (${WORKFLOW_INITIATOR}) will be excluded from approvers`);
+        }
+        // Check if workflow initiator is the only approver
+        if (approversList.length === 1 && approversList[0].toLowerCase() === WORKFLOW_INITIATOR.toLowerCase()) {
+            throw new Error('Workflow initiator is the only approver and exclude-workflow-initiator-as-approver is enabled. This would result in no valid approvers.');
+        }
         console.log('Input validation successful');
     });
 }
@@ -382,8 +411,8 @@ function main() {
             // const approvers = core.getInput('approvers').split(',');
             const approvers = readApproversList(envVarApprovers);
             const failOnDenial = FAIL_ON_DENIAL;
-            const issueTitle = core.getInput('issue_title');
-            const issueBody = core.getInput('issue_body');
+            const issueTitle = core.getInput('issue-title');
+            const issueBody = core.getInput('issue-body');
             const minimumApprovals = parseInt(core.getInput('minimum-approvals'), 10);
             const apprv = yield newApprovalEnvironment(client, repoFullName, repoOwner, runID, approvers, minimumApprovals, issueTitle, issueBody, finalTargetRepoOwner, finalTargetRepoName, failOnDenial);
             yield createApprovalIssue(github_1.context, apprv);

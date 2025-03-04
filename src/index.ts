@@ -8,24 +8,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Constants
+// Interval to poll for new comments in milliseconds
 const pollingInterval: number = 60 * 1000; // 1 minute in milliseconds
 
+// Interval for polling for new comments - debugging
+//const pollingInterval: number = 10 * 1000; // 10 seconds in milliseconds
+
 const FAIL_ON_DENIAL:boolean = true;
-const envVarRepoFullName: string = 'GITHUB_REPOSITORY';
-const envVarRunID: string = 'GITHUB_RUN_ID';
-const envVarRepoOwner: string = 'GITHUB_REPOSITORY_OWNER';
-const envVarWorkflowInitiator: string = 'GITHUB_ACTOR';
-const envVarToken: string = 'INPUT_SECRET';
+const EXCLUDE_WORKFLOW_INITIATOR = core.getBooleanInput('exclude-workflow-initiator-as-approver');
+const WORKFLOW_INITIATOR = process.env.GITHUB_ACTOR || '';
 const envVarApprovers: string = core.getInput('approvers');
-const envVarMinimumApprovals: string = 'INPUT_MINIMUM-APPROVALS';
-const envVarIssueTitle: string = 'INPUT_ISSUE-TITLE';
-const envVarIssueBody: string = 'INPUT_ISSUE-BODY';
-const envVarExcludeWorkflowInitiatorAsApprover: string = 'INPUT_EXCLUDE-WORKFLOW-INITIATOR-AS-APPROVER';
 const envVarAdditionalApprovedWords: string = core.getInput('additional-approved-words');
 const envVarAdditionalDeniedWords: string = core.getInput('additional-denied-words');
-const envVarFailOnDenial: string = 'INPUT_FAIL-ON-DENIAL';
-const envVarTargetRepoOwner: string = 'INPUT_TARGET-REPOSITORY-OWNER';
-const envVarTargetRepo: string = 'INPUT_TARGET-REPOSITORY';
 
 function readAdditionalWords(envVar: string): string[] {
   const rawValue = envVar?.trim() || '';
@@ -133,6 +127,9 @@ async function createApprovalIssue(ctx: any, a: ApprovalEnvironment): Promise<vo
     approversBody += `* @${approver}\n`;
   }
 
+  // Format the approved and denied words for the issue body
+  const formattedApprovedWords = approvedWords.map(word => `\`${word}\``).join(', ');
+  const formattedDeniedWords = deniedWords.map(word => `\`${word}\``).join(', ');
   let bodyMessage = `
 ## Manual Approval
 Workflow is pending manual approval before proceeding.
@@ -146,19 +143,22 @@ ${approversBody}
 * **Workflow Run:** [${a.runID}](${runURL(a)})
 
 ### Instructions
-* Comment \`approve\` or \`approved\` to approve this workflow.
-* Comment \`deny\` or \`denied\` to deny this workflow.
+* To approve: comment with any of these words: ${formattedApprovedWords}
+* To deny: comment with any of these words: ${formattedDeniedWords}
 * If denied, the workflow will continue unless the \`fail-on-denial\` input is set to true.
 * A minimum of ${a.minimumApprovals} ${a.minimumApprovals > 1 ? 'approvals are' : 'approval is'} required.
 `;
 
   if (a.issueBody) {
-    bodyMessage = a.issueBody
+    const customBody = a.issueBody
       .replace('{run_id}', `${a.runID}`)
       .replace('{run_url}', runURL(a))
       .replace('{repo}', a.repoFullName)
       .replace('{approvers}', approversBody)
       .replace('{minimum_approvals}', `${a.minimumApprovals}`);
+
+    // Add a separator between the custom body and the default body
+    bodyMessage += '\n---\n\n### Additional Information\n\n' + customBody;
   }
 
   const { data: issue } = await a.client.issues.create({
@@ -179,19 +179,43 @@ async function approvalFromComments(
   approvers: string[],
   minimumApprovals: number
 ): Promise<ApprovalStatus> {
+  // Create a set of valid approvers
   const approverSet = new Set(approvers.map(a => a.toLowerCase()));
+  
+  // If we should exclude the workflow initiator, remove them from the approver set
+  if (EXCLUDE_WORKFLOW_INITIATOR && WORKFLOW_INITIATOR) {
+    console.log(`Excluding workflow initiator ${WORKFLOW_INITIATOR} from approvers`);
+    approverSet.delete(WORKFLOW_INITIATOR.toLowerCase());
+
+    // If the initiator was the only approver, we have a problem - fail the workflow
+    if (approverSet.size === 0) {
+      console.error('Workflow initiator was the only approver');
+      core.setFailed('Workflow initiator was the only approver');
+    }
+     
+  }
+  
   const approvedBy = new Set<string>();
   const deniedBy = new Set<string>();
 
+  // Process all the comments and look for approval or denial
   for (const comment of comments) {
-    const commentUser = comment.user?.login?.toLowerCase();
-    console.log(`Comment by ${commentUser}: ${comment.body}`);
-    if (!commentUser || !approverSet.has(commentUser)) {
+    const commentUser = comment.user?.login?.toLowerCase();       
+    
+    // Skip without a user 
+    if (!commentUser) {
+      console.log(`Skipping comment without user: ${comment.body}`);
       continue;
     }
 
+    // the user is not an approver, skip the comment
+    if (!approverSet.has(commentUser)) {
+      console.log(`Comment by ${commentUser}: ${comment.body}`);
+      continue;
+    }
+
+    // Check for approval or denial words in the comment body
     const commentBody = comment.body?.toLowerCase() || '';
-    
     const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
     const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
 
@@ -220,8 +244,10 @@ async function approvalFromComments(
   }
 
   return ApprovalStatusPending;
+
 }
 
+/* 
 // Retrieves the list of approvers - NEVER USED!
 async function retrieveApprovers(client: Octokit, repoOwner: string): Promise<string[]> {
   const approversInput = core.getInput('APPROVERS');
@@ -232,7 +258,7 @@ async function retrieveApprovers(client: Octokit, repoOwner: string): Promise<st
   return approversInput.split(',').map(approver => approver.trim());
 }
 
-// Action Output
+// Action Output - NEVER USED!
 async function setActionOutput(name: string, value: string): Promise<void> {
   const outputPath = process.env.GITHUB_OUTPUT;
   if (!outputPath) {
@@ -241,7 +267,7 @@ async function setActionOutput(name: string, value: string): Promise<void> {
 
   await fs.promises.appendFile(outputPath, `${name}=${value}\n`);
 }
-
+ */
 // Handle interrupt
 async function handleInterrupt(client: Octokit, apprv: ApprovalEnvironment): Promise<void> {
   const newState = 'closed';
@@ -322,6 +348,11 @@ function newCommentLoopChannel(client: Octokit, apprv: ApprovalEnvironment): Nod
           state: newState,
         });
 
+        // Fail the workflow if the failOnDenial input is set to true and issue is denied
+        if (apprv.failOnDenial) {
+          core.setFailed('Workflow denied by approver');
+        }
+
         clearInterval(interval);
       }
     } catch (err) {
@@ -375,6 +406,15 @@ async function validateInput(): Promise<void> {
       throw new Error(`MINIMUM_APPROVALS (${minApprovalsNum}) is greater than the number of approvers (${approversList.length}).`);
     }
   }
+  // Add validation for exclude-workflow-initiator-as-approver
+  const excludeInitiator = EXCLUDE_WORKFLOW_INITIATOR;
+  if (excludeInitiator) {
+    console.log(`Workflow initiator (${WORKFLOW_INITIATOR}) will be excluded from approvers`);
+  }
+  // Check if workflow initiator is the only approver
+  if (approversList.length === 1 && approversList[0].toLowerCase() === WORKFLOW_INITIATOR.toLowerCase()) {
+    throw new Error('Workflow initiator is the only approver and exclude-workflow-initiator-as-approver is enabled. This would result in no valid approvers.');
+  }  
   console.log('Input validation successful');
 }
 
@@ -401,8 +441,8 @@ async function main(): Promise<void> {
     const approvers = readApproversList(envVarApprovers);
     const failOnDenial = FAIL_ON_DENIAL;
     
-    const issueTitle = core.getInput('issue_title');
-    const issueBody = core.getInput('issue_body');
+    const issueTitle = core.getInput('issue-title');
+    const issueBody = core.getInput('issue-body');
     const minimumApprovals = parseInt(core.getInput('minimum-approvals'), 10);
 
     const apprv: ApprovalEnvironment = await newApprovalEnvironment(
