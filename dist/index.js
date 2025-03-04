@@ -61,10 +61,29 @@ const core = __importStar(__nccwpck_require__(7484));
 const rest_1 = __nccwpck_require__(6145);
 const github_1 = __nccwpck_require__(3228);
 // Constants
-// Interval to poll for new comments in milliseconds
-const pollingInterval = 60 * 1000; // 1 minute in milliseconds
-// Interval for polling for new comments - debugging
-//const pollingInterval: number = 10 * 1000; // 10 seconds in milliseconds
+// Get polling interval from input or use default
+function getPollingInterval() {
+    try {
+        const debugIntervalStr = core.getInput('debug-polling-interval');
+        if (debugIntervalStr) {
+            const debugInterval = parseInt(debugIntervalStr, 10);
+            if (!isNaN(debugInterval) && debugInterval > 0) {
+                console.log(`Using debug polling interval: ${debugInterval}ms`);
+                return debugInterval;
+            }
+            else {
+                console.log(`Invalid debug polling interval: ${debugIntervalStr}. Using default.`);
+            }
+        }
+    }
+    catch (error) {
+        // Ignore errors reading the debug input
+    }
+    return 60 * 1000; // Default: 1 minute in milliseconds
+}
+// Interval for polling for new comments
+const pollingInterval = getPollingInterval();
+console.log(`Polling interval set to: ${pollingInterval}ms`);
 const FAIL_ON_DENIAL = true;
 const EXCLUDE_WORKFLOW_INITIATOR = core.getBooleanInput('exclude-workflow-initiator-as-approver');
 const WORKFLOW_INITIATOR = process.env.GITHUB_ACTOR || '';
