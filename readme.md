@@ -12,12 +12,19 @@ This action helps implement manual approval gates in your GitHub Actions workflo
 4. Continues or cancels the workflow based on the approvers' decisions
 
 ## Features
+
 - ✅ Customizable approval request titles and messages
 - ✅ Support for multiple approvers
 - ✅ Configurable minimum number of approvals
 - ✅ Cross-repository issue creation
 - ✅ Timeout functionality
+- ✅ Exclude workflow initiator as an approver
+- ✅ Additional approved and denied words
+- ✅ Fail workflow on denial
+- ✅ Customizable issue title and body
+- ✅ Customizable labelling
 - ✅ Automatic issue closing after workflow completion
+- ✅ Lock issue as resolved, when approved or denied
 
 ## Installation
 
@@ -53,7 +60,7 @@ jobs:
         run: |
           npm ci
           npm test
-          
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -64,39 +71,44 @@ jobs:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: user1,user2,user3
           MINIMUM_APPROVALS: 2
-          
+
       - name: Deploy to production
         run: |
           echo "Deploying to production..."
-       # Your deployment commands here
+        # Your deployment commands here
 ```
 
 ## Input Parameters
-| Parameter | Description | Required | Default |
-|-----------|-------------|----------|---------|
-| `secret` | GitHub token for authentication | Yes | N/A |
-| `approvers` | Comma-separated list of GitHub usernames who can approve the request | Yes | N/A |
-| `minimum-approvals` | Minimum number of approvals required | No | 1 |
-| `issue_title` | Title of the created issue. Use {run_id} placeholder to include the run ID | Yes | "Manual approval required for workflow run {run_id}" |
-| `issue_body` | Body of the created issue. Use {run_id} placeholder to include the run ID | Yes | "Please approve workflow run {run_id}" |
-| `exclude-workflow-initiator-as-approver` | Exclude the workflow initiator as an approver | Yes | false |
-| `additional-approved-words` | Comma separated list of additional words that can be used to approve the issue | No | "" |
-| `additional-denied-words` | Comma separated list of additional words that can be used to deny the issue | No | "" |
-| `TARGET_REPO` | Repository name where the approval issue should be created | No | Current repository |
-| `TARGET_REPO_OWNER` | Owner name where the approval issue should be created | No | Current owner |
+
+| Parameter                                | Description                                                                     | Required | Default                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------- | -------- | ---------------------------------------------------- |
+| `secret`                                 | GitHub token for authentication                                                 | Yes      | N/A                                                  |
+| `approvers`                              | Comma-separated list of GitHub usernames who can approve the request            | Yes      | N/A                                                  |
+| `minimum-approvals`                      | Minimum number of approvals required                                            | No       | 1                                                    |
+| `issue_title`                            | Title of the created issue. Use {run_id} placeholder to include the run ID      | Yes      | "Manual approval required for workflow run {run_id}" |
+| `issue_body`                             | Body of the created issue. Use {run_id} placeholder to include the run ID       | Yes      | "Please approve workflow run {run_id}"               |
+| `exclude-workflow-initiator-as-approver` | Exclude the workflow initiator as an approver                                   | Yes      | false                                                |
+| `additional-approved-words`              | Comma separated list of additional words that can be used to approve the issue  | No       | ""                                                   |
+| `additional-denied-words`                | Comma separated list of additional words that can be used to deny the issue     | No       | ""                                                   |
+| `TARGET_REPO`                            | Repository name where the approval issue should be created                      | No       | Current repository                                   |
+| `TARGET_REPO_OWNER`                      | Owner name where the approval issue should be created                           | No       | Current owner                                        |
+| `issue-labels`                           | Label issues with custom labels for manual steps. Provide comma-separated input | No       | Current owner                                        |
 
 ## How Manual Approval Works
 
 1. When the action runs, it creates a new issue in the specified repository
 2. The workflow `pauses` and waits for comments
 3. Designated approvers can comment on the issue:
-  - To approve: Comment with `"approved"`, `"approve"`, `"lgtm"`, or `"yes"`
-  - To deny: Comment with `"denied"`, `"deny"`, or `"no"`
+
+- To approve: Comment with `"approved"`, `"approve"`, `"lgtm"`, or `"yes"`
+- To deny: Comment with `"denied"`, `"deny"`, or `"no"`
+
 4. Once the required number of approvals is reached, the workflow continues
 5. If the request is denied and `fail-on-denial` is enabled, the workflow will fail; otherwise, denial of approval will cause the workflow to be `cancelled`
 6. After completion, the issue is automatically closed
 
 ## Contributing
+
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
@@ -106,5 +118,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 5. Open a Pull Request
 
 ## License
-This project is licenced under the MIT License - see the LICENSE file 
-````
+
+This project is licenced under the MIT License - see the LICENSE file
+
+```
+
+```

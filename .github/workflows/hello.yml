@@ -15,28 +15,29 @@ jobs:
           minimum-approvals: 1
           issue-body: |
             ## Deployment Request
-            
+
             We're requesting approval to deploy **version v1.3.5** to production.
-            
+
             ### Changes in this release
-            
+
             - ✨ Added new feature for user authentication
             - 🐛 Fixed critical bug in payment processing
             - 🔒 Improved security for API endpoints
-            
+
             ### Links
-            
+
             - [View Release Notes](https://github.com/showoffninja/manual-approval-action-ts/releases/tag/v1.3.5)
             - [Compare with previous version](https://github.com/showoffninja/manual-approval-action-ts/compare/v1.3.4...v1.3.5)
             - [Deployment Documentation](https://github.com/showoffninja/manual-approval-action-ts/wiki/Deployment)
-            
+
             ### Impact Assessment
-            
+
             - **Risk Level**: Low
             - **Services Affected**: Authentication, Payment
             - **Downtime Required**: None
-            
+
             Please review and approve this deployment request. The workflow run ID is {run_id}.
           exclude-workflow-initiator-as-approver: false
           additional-approved-words: "sally, nelson, godkendt"
           additional-denied-words: ""
+          issue-labels: "manual-test"

@@ -11,7 +11,7 @@ inputs:
     description: "github secret"
     required: true
     default: "SomeKindOfSecret"
-  approvers: 
+  approvers:
     description: "Comma separated list of users or teams who can approve the deployment"
     required: true
     default: "primaryApprover"
@@ -27,6 +27,10 @@ inputs:
     description: "Additional information in the issue created for approval, i.e. link to changed files or docs"
     required: False
     default: "Please approve or deny the deployment of version v1.3.5."
+  issue-labels:
+    description: "Comma separated list of customized label(s) that can be used to label the issue"
+    required: false
+    default: "manual-approval"
   exclude-workflow-initiator-as-approver:
     description: "Exclude the workflow initiator as an approver"
     required: true

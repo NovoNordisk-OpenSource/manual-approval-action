@@ -160,12 +160,16 @@ ${approversBody}
     // Add a separator between the custom body and the default body
     bodyMessage += '\n---\n\n### Additional Information\n\n' + customBody;
   }
+  // Add custom label to the issue (optional) or use default "manual-approval"
+  const customLabels = core.getInput('issue-labels');
+  const labels = customLabels ? customLabels.split(',').map(label => label.trim()) : ['manual-approval'];
 
   const { data: issue } = await a.client.issues.create({
     owner: a.targetRepoOwner,
     repo: a.targetRepoName,
     title: issueTitle,
     body: bodyMessage,
+    labels: labels
   });
 
   a.approvalIssue = issue;
@@ -293,6 +297,21 @@ async function handleInterrupt(client: Octokit, apprv: ApprovalEnvironment): Pro
   }
 }
 
+// Function to handle the locking of an issue, after it is closed
+async function lockIssue(client: Octokit, apprv: ApprovalEnvironment): Promise<void> {
+  try {
+    await client.issues.lock({
+      owner: apprv.targetRepoOwner,
+      repo: apprv.targetRepoName,
+      issue_number: apprv.approvalIssueNumber,
+      lock_reason: 'resolved',
+    });
+    console.log('Issue #', apprv.approvalIssueNumber, ' has been locked');
+  } catch (err) {
+    console.error(`Error locking issue: ${err}`);
+  }
+} 
+
 // Comment loop to check for approvals
 function newCommentLoopChannel(client: Octokit, apprv: ApprovalEnvironment): NodeJS.Timeout {
   let interval: NodeJS.Timeout;
@@ -326,6 +345,8 @@ function newCommentLoopChannel(client: Octokit, apprv: ApprovalEnvironment): Nod
           state: newState,
         });
 
+        // Lock the issue after closing
+        await lockIssue(client, apprv);
         console.log('Workflow manual approval completed');
         clearInterval(interval);
       } else if (approved === ApprovalStatusDenied) {
@@ -348,6 +369,8 @@ function newCommentLoopChannel(client: Octokit, apprv: ApprovalEnvironment): Nod
           state: newState,
         });
 
+        // Lock the issue after closing
+        await lockIssue(client, apprv);
         // Fail the workflow if the failOnDenial input is set to true and issue is denied
         if (apprv.failOnDenial) {
           core.setFailed('Workflow denied by approver');

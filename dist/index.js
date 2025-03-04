@@ -166,11 +166,15 @@ ${approversBody}
             // Add a separator between the custom body and the default body
             bodyMessage += '\n---\n\n### Additional Information\n\n' + customBody;
         }
+        // Add custom label to the issue (optional) or use default "manual-approval"
+        const customLabels = core.getInput('issue-labels');
+        const labels = customLabels ? customLabels.split(',').map(label => label.trim()) : ['manual-approval'];
         const { data: issue } = yield a.client.issues.create({
             owner: a.targetRepoOwner,
             repo: a.targetRepoName,
             title: issueTitle,
             body: bodyMessage,
+            labels: labels
         });
         a.approvalIssue = issue;
         a.approvalIssueNumber = issue.number;
@@ -281,6 +285,23 @@ function handleInterrupt(client, apprv) {
         }
     });
 }
+// Function to handle the locking of an issue, after it is closed
+function lockIssue(client, apprv) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield client.issues.lock({
+                owner: apprv.targetRepoOwner,
+                repo: apprv.targetRepoName,
+                issue_number: apprv.approvalIssueNumber,
+                lock_reason: 'resolved',
+            });
+            console.log('Issue #', apprv.approvalIssueNumber, ' has been locked');
+        }
+        catch (err) {
+            console.error(`Error locking issue: ${err}`);
+        }
+    });
+}
 // Comment loop to check for approvals
 function newCommentLoopChannel(client, apprv) {
     let interval;
@@ -308,6 +329,8 @@ function newCommentLoopChannel(client, apprv) {
                     issue_number: apprv.approvalIssueNumber,
                     state: newState,
                 });
+                // Lock the issue after closing
+                yield lockIssue(client, apprv);
                 console.log('Workflow manual approval completed');
                 clearInterval(interval);
             }
@@ -328,6 +351,8 @@ function newCommentLoopChannel(client, apprv) {
                     issue_number: apprv.approvalIssueNumber,
                     state: newState,
                 });
+                // Lock the issue after closing
+                yield lockIssue(client, apprv);
                 // Fail the workflow if the failOnDenial input is set to true and issue is denied
                 if (apprv.failOnDenial) {
                     core.setFailed('Workflow denied by approver');
