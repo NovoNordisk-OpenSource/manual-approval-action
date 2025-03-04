@@ -236,6 +236,14 @@ async function approvalFromComments(
       console.log(`Comment by ${commentUser}: ${comment.body}`);
       continue;
     }
+    // Only process single-word comments (after trimming) to avoid false positives
+    // This avoids complex statements like "I do not approve"
+    if (comment.body?.trim().split(' ')) {
+      console.log(`Skipping multi-word comment by ${commentUser}: "${comment.body}"`);
+      continue;
+    }
+
+    console.log(`Checking single-word comment by ${commentUser}: "${comment.body}"`);
 
     // Check for approval or denial words in the comment body
     const commentBody = comment.body?.toLowerCase() || '';

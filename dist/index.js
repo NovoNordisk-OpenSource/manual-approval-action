@@ -202,7 +202,7 @@ ${approversBody}
 }
 function approvalFromComments(comments, approvers, minimumApprovals) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         // Create a set of valid approvers
         const approverSet = new Set(approvers.map(a => a.toLowerCase()));
         // If we should exclude the workflow initiator, remove them from the approver set
@@ -230,8 +230,15 @@ function approvalFromComments(comments, approvers, minimumApprovals) {
                 console.log(`Comment by ${commentUser}: ${comment.body}`);
                 continue;
             }
+            // Only process single-word comments (after trimming) to avoid false positives
+            // This avoids complex statements like "I do not approve"
+            if ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.trim().split(' ')) {
+                console.log(`Skipping multi-word comment by ${commentUser}: "${comment.body}"`);
+                continue;
+            }
+            console.log(`Checking single-word comment by ${commentUser}: "${comment.body}"`);
             // Check for approval or denial words in the comment body
-            const commentBody = ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.toLowerCase()) || '';
+            const commentBody = ((_d = comment.body) === null || _d === void 0 ? void 0 : _d.toLowerCase()) || '';
             const isApproval = approvedWords.some(word => commentBody.includes(word.toLowerCase()));
             const isDenial = deniedWords.some(word => commentBody.includes(word.toLowerCase()));
             console.log(`Checking comment: "${commentBody}"`);
