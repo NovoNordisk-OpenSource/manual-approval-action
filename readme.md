@@ -32,7 +32,7 @@ This action is available in the GitHub Actions Marketplace. Simply reference it 
 
 ```yaml
 - name: Manual Approval Step
-  uses: showoffninja/manual-approval-action-ts@v1
+  uses: showoffninja/manual-approval-action-ts@latest
   with:
     secret: ${{ secrets.GITHUB_TOKEN }}
     approvers: user1,user2,user3
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Request manual approval
-        uses: showoffninja/manual-approval-action-ts@main
+        uses: showoffninja/manual-approval-action-ts@latest
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: some_approver # This must be Github Users
