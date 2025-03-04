@@ -431,16 +431,17 @@ async function validateInput(): Promise<void> {
   }
   // Add validation for exclude-workflow-initiator-as-approver
   const excludeInitiator = EXCLUDE_WORKFLOW_INITIATOR;
+  
   if (excludeInitiator) {
     console.log(`Workflow initiator (${WORKFLOW_INITIATOR}) will be excluded from approvers`);
-  }
+  
   // Check if workflow initiator is the only approver
   if (approversList.length === 1 && approversList[0].toLowerCase() === WORKFLOW_INITIATOR.toLowerCase()) {
     throw new Error('Workflow initiator is the only approver and exclude-workflow-initiator-as-approver is enabled. This would result in no valid approvers.');
   }  
   console.log('Input validation successful');
 }
-
+}
 // Main function
 async function main(): Promise<void> {
   try {
