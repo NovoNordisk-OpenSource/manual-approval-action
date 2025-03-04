@@ -242,7 +242,11 @@ async function approvalFromComments(
 
     // Only process single-word comments (after trimming) to avoid false positives
     // This avoids complex statements like "I do not approve"
-    if (commentBody?.trim().split(' ')) {
+
+    // Split the comment by whitespace to check if it's a single word
+    const words = commentBody.split(/\s+/).filter(word => word.length > 0);
+
+    if (words.length !== 1) {
       console.log(`Skipping multi-word comment by ${commentUser}: "${commentBody}"`);
       continue;
     }
