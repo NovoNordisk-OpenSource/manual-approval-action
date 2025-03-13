@@ -1,4 +1,4 @@
-name: Say Hello
+name: Test Manual Approval
 on:
   workflow_dispatch:
 
